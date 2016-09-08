@@ -1,0 +1,32 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 # Counting the number of fixing revisons for all Java projects with SVN\
+p: Project = input;\
+#counts: output top(100) of string weight int;\
+#files: output top(100) of string weight int;#collection[string] of int;\
+fixCounts:=0;\
+fixJavaFiles:=0;\
+candidate: output collection[string][string][int] of int;\
+\
+visit(p, visitor \{\
+	before n: Project -> ifall (i: int; !match(`^java$`, lowercase(n.programming_languages[i]))) stop;\
+	before node: CodeRepository -> if (node.kind != RepositoryKind.SVN) stop;\
+	before node: Revision -> \{\
+	    if (isfixingrevision(node.log)) \{\
+    	    fixCounts++;\
+    	    foreach(x:int;node.files[x])\{\
+	            file:= node.files[x].kind;\
+	            if(file == FileKind.SOURCE_JAVA_JLS2 || file == FileKind.SOURCE_JAVA_JLS3 \
+	            || file == FileKind.SOURCE_JAVA_JLS4 || file == FileKind.SOURCE_JAVA_ERROR)\{\
+                   fixJavaFiles++;  \
+	            \}\
+	        \}\
+	    \}\
+\
+	\}\
+	after n: Project -> candidate[p.name][p.project_url][fixCounts] << fixJavaFiles;\
+\});}
